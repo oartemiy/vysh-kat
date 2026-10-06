@@ -9,8 +9,10 @@ type Repository interface {
 	AddTransport(t domain.Transport)
 	AddThing(th domain.Thing)
 
-	GetItems() []domain.InventoryItem
+	GetThings() []domain.Thing
 	GetTransports() []domain.Transport
+
+	GetAllItems() []domain.InventoryItem
 
 	TotalDailyEnergyKWh() float64
 	NoviceSuitableTransports() []domain.Transport

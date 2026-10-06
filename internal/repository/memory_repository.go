@@ -27,12 +27,23 @@ func (r *MemoryRepository) AddThing(th domain.Thing) {
 	r.things = append(r.things, th)
 }
 
-func (r *MemoryRepository) GetItems() []domain.Thing {
+func (r *MemoryRepository) GetThings() []domain.Thing {
 	return r.things
 }
 
 func (r *MemoryRepository) GetTransports() []domain.Transport {
 	return r.transports
+}
+
+func (r *MemoryRepository) GetAllItems() []domain.InventoryItem {
+	items := make([]domain.InventoryItem, 0, len(r.transports)+len(r.things))
+	for _, t := range r.transports {
+		items = append(items, t)
+	}
+	for _, th := range r.things {
+		items = append(items, th)
+	}
+	return items
 }
 
 func (r *MemoryRepository) TotalDailyEnergyKWh() float64 {

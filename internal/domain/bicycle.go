@@ -7,6 +7,10 @@ type Bicycle struct {
 	noviceSimplicity int
 }
 
+func (k Bicycle) GetSimplicity() int {
+	return k.noviceSimplicity
+}
+
 func NewBicycle(name, inv string, energy float64, simplicity int) Bicycle {
 	return Bicycle{name, inv, energy, simplicity}
 }

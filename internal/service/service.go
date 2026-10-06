@@ -8,8 +8,12 @@ import (
 )
 
 type Service struct {
-	rep           repository.Repository
+	repository    repository.Repository
 	serviceCenter inspection.ServiceCenter
+}
+
+func NewService(rep repository.Repository, servCenter inspection.ServiceCenter) *Service {
+	return &Service{repository: rep, serviceCenter: servCenter}
 }
 
 func (s *Service) AddTransport(t domain.Transport) error {
@@ -17,18 +21,22 @@ func (s *Service) AddTransport(t domain.Transport) error {
 	if !result.Accepted {
 		return errors.New(result.Reason)
 	}
-	s.rep.AddTransport(t)
+	s.repository.AddTransport(t)
 	return nil
 }
 
 func (s *Service) AddThing(th domain.Thing) {
-	s.rep.AddThing(th)
+	s.repository.AddThing(th)
 }
 
 func (s *Service) TotalDailyEnergyKWh() float64 {
-	return s.rep.TotalDailyEnergyKWh()
+	return s.repository.TotalDailyEnergyKWh()
 }
 
 func (s *Service) NoviceSuitableTransports() []domain.Transport {
-	return s.rep.NoviceSuitableTransports()
+	return s.repository.NoviceSuitableTransports()
+}
+
+func (s *Service) AllItems() []domain.InventoryItem {
+	return s.repository.GetAllItems()
 }

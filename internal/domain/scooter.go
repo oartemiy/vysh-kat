@@ -7,6 +7,10 @@ type Scooter struct {
 	noviceSimplicity int
 }
 
+func (k Scooter) GetSimplicity() int {
+	return k.noviceSimplicity
+}
+
 func NewScooter(name, inv string, energy float64, simplicity int) Scooter {
 	return Scooter{name, inv, energy, simplicity}
 }

@@ -7,6 +7,10 @@ type EBike struct {
 	noviceSimplicity int
 }
 
+func (k EBike) GetSimplicity() int {
+	return k.noviceSimplicity
+}
+
 func NewEBike(name, inv string, energy float64, simplicity int) EBike {
 	return EBike{name, inv, energy, simplicity}
 }
