@@ -28,39 +28,42 @@ func (a *App) printMenu() {
 	a.writer.WriteString("4. Транспорт для новичков\n")
 	a.writer.WriteString("5. Вывести все единицы и вещи\n")
 	a.writer.Flush()
-
 }
 
-func (a *App) readInput(promo string) (string, error) {
-	a.writer.WriteString(promo)
+func (a *App) readInput(prompt string) (string, error) {
+	a.writer.WriteString(prompt)
 	a.writer.Flush()
 	text, err := a.reader.ReadString('\n')
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(text), err
+	return strings.TrimSpace(text), nil
 }
 
 func (a *App) finishGame(exitCode int, err error) {
 	if err != nil {
-		a.writer.WriteString(err.Error())
+		a.writer.WriteString(fmt.Sprintf("Ошибка: %s\n", err))
 		a.writer.Flush()
 	}
 	os.Exit(exitCode)
 }
 
 func (a *App) printErrorAndContinue(err error) {
-	a.writer.WriteString(err.Error())
+	a.writer.WriteString(fmt.Sprintf("Ошибка: %s\n", err))
 	a.writer.Flush()
 }
 
 func (a *App) addTransport() error {
 	a.writer.WriteString("\n--- Добавление транспорта ---\n")
-	name, err := a.readInput("Имя средсва: ")
+	kind, err := a.readInput("Тип транспорта (самокат / велосипед / электровелосипед): ")
 	if err != nil {
 		return err
 	}
-	inv, err := a.readInput("Инвентраный номер: ")
+	name, err := a.readInput("Имя средства: ")
+	if err != nil {
+		return err
+	}
+	inv, err := a.readInput("Инвентарный номер: ")
 	if err != nil {
 		return err
 	}
@@ -70,29 +73,21 @@ func (a *App) addTransport() error {
 	}
 	energy, err := strconv.ParseFloat(energyStr, 64)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w (введено %q)", domain.ErrEnergyNotANumber, energyStr)
 	}
-	simpStr, err := a.readInput("Простота для новичка (1-10): ")
+	simplicityStr, err := a.readInput("Простота для новичка (1-10): ")
 	if err != nil {
 		return err
 	}
-	simplicity, err := strconv.Atoi(simpStr)
+	simplicity, err := strconv.Atoi(simplicityStr)
+	if err != nil {
+		return fmt.Errorf("%w (введено %q)", domain.ErrSimplicityNotANumber, simplicityStr)
+	}
+	transport, err := domain.NewTransport(kind, name, inv, energy, simplicity)
 	if err != nil {
 		return err
 	}
-	var transport domain.Transport
-	switch strings.ToLower(strings.TrimSpace(name)) {
-	case "самокат":
-		transport = domain.NewScooter(name, inv, energy, simplicity)
-	case "электровелосипед":
-		transport = domain.NewEBike(name, inv, energy, simplicity)
-	case "велосипед":
-		transport = domain.NewBicycle(name, inv, energy, simplicity)
-	default:
-		return domain.ErrInvalidTransportName
-	}
-	err = a.container.Service.AddTransport(transport)
-	if err != nil {
+	if err := a.container.Service.AddTransport(transport); err != nil {
 		return err
 	}
 	a.writer.WriteString("Транспорт принят в парк\n")
@@ -102,6 +97,10 @@ func (a *App) addTransport() error {
 
 func (a *App) addThing() error {
 	a.writer.WriteString("\n--- Добавление вещи ---\n")
+	kind, err := a.readInput("Тип вещи (шлем / док-станция): ")
+	if err != nil {
+		return err
+	}
 	name, err := a.readInput("Имя вещи: ")
 	if err != nil {
 		return err
@@ -110,18 +109,13 @@ func (a *App) addThing() error {
 	if err != nil {
 		return err
 	}
-
-	var thing domain.Thing
-	switch strings.ToLower(strings.TrimSpace(name)) {
-	case "шлем":
-		thing = domain.NewHelmet(name, inv)
-	case "док-станция", "докстанция":
-		thing = domain.NewDockingStation(name, inv)
-	default:
-		return domain.ErrInvalidThingName
+	thing, err := domain.NewThing(kind, name, inv)
+	if err != nil {
+		return err
 	}
-
-	a.container.Service.AddThing(thing)
+	if err := a.container.Service.AddThing(thing); err != nil {
+		return err
+	}
 	a.writer.WriteString("Вещь добавлена на баланс\n")
 	a.writer.Flush()
 	return nil
@@ -176,11 +170,11 @@ func (a *App) printAllItems() {
 func (a *App) Run() {
 	for {
 		a.printMenu()
-		choise, err := a.readInput("\nВведите номер действия: ")
+		choice, err := a.readInput("\nВведите номер действия: ")
 		if err != nil {
 			a.finishGame(-1, err)
 		}
-		switch choise {
+		switch choice {
 		case "0":
 			a.finishGame(0, nil)
 		case "1":
@@ -202,6 +196,5 @@ func (a *App) Run() {
 		default:
 			a.printErrorAndContinue(domain.ErrInvalidCommand)
 		}
-
 	}
 }

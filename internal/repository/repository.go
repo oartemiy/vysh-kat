@@ -9,6 +9,8 @@ type Repository interface {
 	AddTransport(t domain.Transport)
 	AddThing(th domain.Thing)
 
+	HasInventoryNumber(inv string) bool
+
 	GetThings() []domain.Thing
 	GetTransports() []domain.Transport
 

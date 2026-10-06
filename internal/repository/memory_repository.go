@@ -12,10 +12,16 @@ type MemoryRepository struct {
 }
 
 func NewMemoryRepository(policy novice_policy.NovicePolicy) *MemoryRepository {
+	if policy == nil {
+		policy = &novice_policy.BasicNovicePolicy{}
+	}
 	return &MemoryRepository{policy: policy}
 }
 
 func (r *MemoryRepository) ChangeNovicePolicy(policy novice_policy.NovicePolicy) {
+	if policy == nil {
+		return
+	}
 	r.policy = policy
 }
 
@@ -25,6 +31,20 @@ func (r *MemoryRepository) AddTransport(t domain.Transport) {
 
 func (r *MemoryRepository) AddThing(th domain.Thing) {
 	r.things = append(r.things, th)
+}
+
+func (r *MemoryRepository) HasInventoryNumber(inv string) bool {
+	for _, t := range r.transports {
+		if t.InventoryNumber() == inv {
+			return true
+		}
+	}
+	for _, th := range r.things {
+		if th.InventoryNumber() == inv {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *MemoryRepository) GetThings() []domain.Thing {
@@ -63,7 +83,7 @@ func (r *MemoryRepository) TotalDailyEnergyKWh() float64 {
 func (r *MemoryRepository) NoviceSuitableTransports() []domain.Transport {
 	var result []domain.Transport
 	for _, t := range r.transports {
-		if t.GetSimplicity() >= 6 {
+		if r.policy.IsNoviceFriendly(t) {
 			result = append(result, t)
 		}
 	}
